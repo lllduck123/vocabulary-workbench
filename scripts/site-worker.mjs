@@ -20,7 +20,11 @@ async function translateOne(env, item) {
   });
   const payload = await response.json().catch(() => ({}));
   const translated = payload?.trans_result?.[0]?.dst;
-  if (!response.ok || !translated) throw new Error(payload?.error_msg || '百度翻译服务返回异常');
+  if (!response.ok || !translated) {
+    const message = payload?.error_msg || '百度翻译服务返回异常';
+    const code = payload?.error_code;
+    throw new Error(code ? `百度翻译错误 ${code}: ${message}` : message);
+  }
   return translated;
 }
 

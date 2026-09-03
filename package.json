@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/prepare-site-build.mjs",
+    "dev:local": "npm run build && wrangler dev --config wrangler.local.json --ip 127.0.0.1 --port 8787",
     "test": "tsc -b --noEmit"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.4",
-    "vite": "^5.4.2"
+    "vite": "^5.4.2",
+    "wrangler": "^4.128.0"
   }
 }
