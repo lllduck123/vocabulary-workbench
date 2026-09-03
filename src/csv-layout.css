@@ -32,7 +32,8 @@
 
 .csv-controls .rank-highlight-toggle,
 .csv-controls .main-dedup-toggle,
-.csv-controls .root-tab-toggle {
+.csv-controls .root-tab-toggle,
+.csv-controls .translation-toggle {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -54,7 +55,8 @@
 
 .csv-controls .rank-highlight-toggle input,
 .csv-controls .main-dedup-toggle input,
-.csv-controls .root-tab-toggle input {
+.csv-controls .root-tab-toggle input,
+.csv-controls .translation-toggle input {
   width: 18px;
   height: 18px;
   margin: 0;
