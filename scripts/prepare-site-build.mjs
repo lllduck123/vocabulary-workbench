@@ -13,5 +13,13 @@ for (const entry of await readdir(dist)) {
 }
 await writeFile(resolve(client, '.assetsignore'), '.vite\nwrangler.json\n.dev.vars\n', 'utf8');
 await mkdir(server, { recursive: true });
-await cp(resolve('scripts', 'site-worker.mjs'), resolve(server, 'index.js'));
+const workerSource = resolve('scripts', 'site-worker.mjs');
+await cp(workerSource, resolve(server, 'index.js'));
+
+// Cloudflare Pages direct uploads support an advanced-mode `_worker.js` at the
+// root of the uploaded directory. Keep the same Worker beside the static
+// assets so `/api/translate` also works when `dist/client` is uploaded
+// directly, instead of only when the separate Workers config is used.
+await cp(workerSource, resolve(client, '_worker.js'));
+
 await writeFile(resolve(server, 'wrangler.json'), JSON.stringify({ main: 'index.js', no_bundle: true, assets: { directory: '../client' } }, null, 2), 'utf8');
