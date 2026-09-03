@@ -13,5 +13,5 @@ for (const entry of await readdir(dist)) {
 }
 await writeFile(resolve(client, '.assetsignore'), '.vite\nwrangler.json\n.dev.vars\n', 'utf8');
 await mkdir(server, { recursive: true });
-await writeFile(resolve(server, 'index.js'), `export default {\n  async fetch(request, env) {\n    return env.ASSETS.fetch(request);\n  },\n};\n`, 'utf8');
+await cp(resolve('scripts', 'site-worker.mjs'), resolve(server, 'index.js'));
 await writeFile(resolve(server, 'wrangler.json'), JSON.stringify({ main: 'index.js', no_bundle: true, assets: { directory: '../client' } }, null, 2), 'utf8');
