@@ -13,9 +13,16 @@ export async function translateViaBaidu(items: TranslationItem[], onProgress: (c
   for (let start = 0; start < items.length; start += ITEMS_PER_REQUEST) {
     const batch = items.slice(start, start + ITEMS_PER_REQUEST);
     const response = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: batch }) });
-    const payload = await response.json().catch(() => ({} as TranslationResponse)) as TranslationResponse;
-    if (!response.ok) throw new Error(payload.error || '在线翻译服务暂时不可用');
-    for (const [source, target] of payload.results ?? []) translations.set(source, target);
+    const contentType = response.headers.get('content-type') ?? '';
+    const payload = contentType.includes('application/json')
+      ? await response.json().catch(() => ({} as TranslationResponse)) as TranslationResponse
+      : {} as TranslationResponse;
+    if (!response.ok) {
+      if (payload.error) throw new Error(payload.error);
+      throw new Error(`翻译接口请求失败（HTTP ${response.status}，返回 ${contentType || '非 JSON'}）`);
+    }
+    if (!Array.isArray(payload.results)) throw new Error(`翻译接口返回格式异常（HTTP ${response.status}）`);
+    for (const [source, target] of payload.results) translations.set(source, target);
     completed += batch.length;
     onProgress(completed, items.length);
   }
