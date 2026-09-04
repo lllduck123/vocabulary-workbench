@@ -272,7 +272,7 @@ function TranslationCost({ files, column, translationColumns, selectedColumns, c
   });
   const cached = values.length - pending.length - values.filter(value => detectLanguage(value) === 'zho_Hans').length;
   const chars = pending.reduce((total, value) => total + Array.from(value).length, 0);
-  return <p className="translation-note">使用限额为1百万字符/月，尽量只翻译最终版本。缓存命中：{Math.max(0, cached).toLocaleString()} 条；本次预计消耗：{chars.toLocaleString()} 字符</p>;
+  return <p className="translation-note"><span>使用限额为1百万字符/月，尽量只翻译最终版本。</span><span className="translation-note-meta">缓存命中：{Math.max(0, cached).toLocaleString()} 条；本次预计消耗：{chars.toLocaleString()} 字符</span></p>;
 }
 
 function TutorialModal({ onClose }: { onClose: () => void }) {
