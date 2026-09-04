@@ -22,4 +22,12 @@ await cp(workerSource, resolve(server, 'index.js'));
 // directly, instead of only when the separate Workers config is used.
 await cp(workerSource, resolve(client, '_worker.js'));
 
+const translationCacheDirectory = resolve(client, 'translation-cache');
+await mkdir(translationCacheDirectory, { recursive: true });
+const translationCacheFiles = (await readdir(translationCacheDirectory, { withFileTypes: true }))
+  .filter(entry => entry.isFile() && /\.csv$/i.test(entry.name))
+  .map(entry => `/translation-cache/${encodeURIComponent(entry.name)}`)
+  .sort((left, right) => left.localeCompare(right));
+await writeFile(resolve(translationCacheDirectory, 'manifest.json'), JSON.stringify(translationCacheFiles), 'utf8');
+
 await writeFile(resolve(server, 'wrangler.json'), JSON.stringify({ main: 'index.js', no_bundle: true, assets: { directory: '../client' } }, null, 2), 'utf8');

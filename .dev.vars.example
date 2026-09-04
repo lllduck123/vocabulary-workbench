@@ -1,2 +1,5 @@
-BAIDU_APP_ID=replace-with-your-baidu-appid
+# 推荐使用百度智能云“API Key 管理”中创建、且已授权机器翻译的 API Key
 BAIDU_API_KEY=replace-with-your-baidu-api-key
+# 可选：旧版应用鉴权方式（仅在未设置 BAIDU_API_KEY 时使用）
+BAIDU_ACCESS_TOKEN=replace-with-your-baidu-access-token
+BAIDU_SECRET_KEY=replace-with-your-baidu-secret-key
