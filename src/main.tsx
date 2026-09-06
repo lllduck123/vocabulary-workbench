@@ -9,9 +9,24 @@ import './csv-layout.css';
 
 type Frequency = { term: string; count: number; first: number };
 type CsvData = { name: string; headers: string[]; rows: string[][]; error?: string };
-const STOPWORDS = new Set('a an and are as at be by for from has have he her his i in is it its me my of on or our she that the their them they this to was we were what when where which who will with you your 的 了 和 是 在 我 有 也 就 不 人 都 一个 这 他 她 它 们 为 之 与 而 及 或 被 对 到 从 以 于'.split(' '));
+const STOPWORDS = new Set(`
+  a an and are as at be by for from has have he her his i in is it its me my of on or our
+  she that the their them they this to was we were what when where which who will with you your
+  的 了 和 是 在 我 有 也 就 不 人 都 一个 这 他 她 它 们 为 之 与 而 及 或 被 对 到 从 以 于
+  der die das den dem des ein eine einen einem einer eines eine
+  und oder aber als auch an auf aus bei durch für gegen ohne über unter von vor zu zum zur im in
+  ist sind war waren nicht kein keine keinen keinem keiner dieses diese dieser diesen diesem
+  ich du er sie es wir ihr ihnen mich dich uns euch mein dein sein ihr unser euer
+  le la les un une des du au aux de d' et ou mais comme dans en entre par pour sans sous sur avec
+  est sont était étaient ne pas ce cet cette ces mon ton son notre votre leur leurs je tu il elle
+  nous vous ils elles me te se lui leur y en
+`.split(/\s+/).filter(Boolean));
 
-function tokenize(text: string) { return text.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]+|[一-龥]+/gu) ?? []; }
+// Keep Latin words (including French ligatures) intact when they contain an
+// internal apostrophe or hyphen, e.g. "l’amour", "d'accord", or
+// "Dampf-Schiff". The connector must have word characters on both sides so
+// standalone punctuation is never counted as a token.
+function tokenize(text: string) { return text.match(/[A-Za-zÀ-ÖØ-öø-ÿŒœ0-9]+(?:['’\-][A-Za-zÀ-ÖØ-öø-ÿŒœ0-9]+)*|[一-龥]+/gu) ?? []; }
 function isNumber(t: string) { return /^[\d０-９]+([.,，．]\d+)?%?$/.test(t); }
 function makeFreq(tokens: string[], n: number, ignoreCase: boolean, excludeStop = false, excludeNumber = false): Frequency[] {
   const map = new Map<string, Frequency>();
@@ -272,7 +287,7 @@ function TranslationCost({ files, column, translationColumns, selectedColumns, c
   });
   const cached = values.length - pending.length - values.filter(value => detectLanguage(value) === 'zho_Hans').length;
   const chars = pending.reduce((total, value) => total + Array.from(value).length, 0);
-  return <p className="translation-note"><span>使用限额为1百万字符/月，尽量只翻译最终版本。</span><span className="translation-note-meta">缓存命中：{Math.max(0, cached).toLocaleString()} 条；本次预计消耗：{chars.toLocaleString()} 字符</span></p>;
+  return <p className="translation-note"><span>使用限额为1百万字符/月，尽量只翻译最终版本。</span><span className="translation-note-warning">翻译有可能会生成一个.csv后缀的文件，请把这个文件发给网站管理员！</span><span className="translation-note-meta">缓存命中：{Math.max(0, cached).toLocaleString()} 条；本次预计消耗：{chars.toLocaleString()} 字符</span></p>;
 }
 
 function TutorialModal({ onClose }: { onClose: () => void }) {
