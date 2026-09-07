@@ -54,6 +54,10 @@ export async function translateViaBaidu(items: TranslationItem[], onProgress: (c
     for (let start = 0; start < pending.length; start += ITEMS_PER_REQUEST) {
       if (activeSignal.aborted) throw new DOMException('翻译已停止', 'AbortError');
       const batch = pending.slice(start, start + ITEMS_PER_REQUEST);
+      const sourceLanguages = new Map<string, string>();
+      for (const item of batch) {
+        if (!sourceLanguages.has(item.value)) sourceLanguages.set(item.value, item.sourceLanguage);
+      }
       const response = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: batch }), signal: activeSignal });
       const contentType = response.headers.get('content-type') ?? '';
       const payload = contentType.includes('application/json')
@@ -99,7 +103,7 @@ export async function translateViaBaidu(items: TranslationItem[], onProgress: (c
       }
       if (!Array.isArray(payload.results)) throw new Error(`翻译接口返回格式异常（HTTP ${response.status}）`);
       for (const [source, target] of payload.results) {
-        const sourceLanguage = batch.find(item => item.value === source)?.sourceLanguage;
+        const sourceLanguage = sourceLanguages.get(source);
         if (!sourceLanguage) continue;
         const key = translationCacheKey(sourceLanguage, source);
         translations.set(key, target);

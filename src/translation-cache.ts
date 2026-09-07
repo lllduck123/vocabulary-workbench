@@ -59,9 +59,11 @@ export async function loadTranslationCache() {
     return cacheResponse.ok ? cacheResponse.text() : '';
   }));
   const cache = new Map<string, TranslationCacheEntry>();
-  for (const entry of texts.flatMap(parseTranslationCache)) {
-    const key = translationCacheKey(entry.sourceLanguage, entry.sourceText);
-    if (!cache.has(key)) cache.set(key, entry);
+  for (const text of texts) {
+    for (const entry of parseTranslationCache(text)) {
+      const key = translationCacheKey(entry.sourceLanguage, entry.sourceText);
+      if (!cache.has(key)) cache.set(key, entry);
+    }
   }
   return cache;
 }
