@@ -12,6 +12,10 @@ const ITEMS_PER_REQUEST = 50;
 const SKIPPABLE_ERROR_CODES = new Set(['20003', '58001', '59003']);
 let activeController: AbortController | null = null;
 
+function translationKey(item: TranslationItem) {
+  return translationCacheKey(item.sourceLanguage, item.value);
+}
+
 export function cancelActiveTranslation() {
   activeController?.abort();
 }
@@ -30,14 +34,14 @@ export async function translateViaBaidu(items: TranslationItem[], onProgress: (c
   }
   const pending: TranslationItem[] = [];
   for (const item of items) {
+    const key = translationKey(item);
     if (item.sourceLanguage === 'zho_Hans') {
-      translations.set(item.value, item.value);
+      translations.set(key, item.value);
       continue;
     }
-    const key = translationCacheKey(item.sourceLanguage, item.value);
     const cached = cache.get(key);
     if (cached) {
-      translations.set(item.value, cached.translatedText);
+      translations.set(key, cached.translatedText);
       sessionEntries.set(key, cached);
     } else {
       pending.push(item);
@@ -73,14 +77,15 @@ export async function translateViaBaidu(items: TranslationItem[], onProgress: (c
                 if (!(singleCode && SKIPPABLE_ERROR_CODES.has(singleCode))) {
                   throw new Error(singleError || `翻译接口请求失败（HTTP ${singleResponse.status}）`);
                 }
-                translations.set(item.value, item.value);
+                translations.set(translationKey(item), item.value);
               } else {
                 const [source, target] = singlePayload.results[0] ?? [];
                 if (source && target) {
-                  translations.set(source, target);
-                  sessionEntries.set(translationCacheKey(item.sourceLanguage, source), { sourceLanguage: item.sourceLanguage, sourceText: source.trim(), translatedText: target });
+                  const key = translationCacheKey(item.sourceLanguage, source);
+                  translations.set(key, target);
+                  sessionEntries.set(key, { sourceLanguage: item.sourceLanguage, sourceText: source.trim(), translatedText: target });
                 } else {
-                  translations.set(item.value, item.value);
+                  translations.set(translationKey(item), item.value);
                 }
               }
               completed += 1;
@@ -96,8 +101,9 @@ export async function translateViaBaidu(items: TranslationItem[], onProgress: (c
       for (const [source, target] of payload.results) {
         const sourceLanguage = batch.find(item => item.value === source)?.sourceLanguage;
         if (!sourceLanguage) continue;
-        translations.set(source, target);
-        sessionEntries.set(translationCacheKey(sourceLanguage, source), { sourceLanguage, sourceText: source.trim(), translatedText: target });
+        const key = translationCacheKey(sourceLanguage, source);
+        translations.set(key, target);
+        sessionEntries.set(key, { sourceLanguage, sourceText: source.trim(), translatedText: target });
       }
       completed += batch.length;
       onProgress(cacheHits + completed, cacheHits + pending.length);

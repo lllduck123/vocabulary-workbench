@@ -5,8 +5,18 @@ const MAX_ITEMS = 100;
 const MAX_ITEM_CHARS = 6000;
 const MAX_TOTAL_CHARS = 80000;
 const CONCURRENCY = 3;
+const BAIDU_LANGUAGE_CODES = {
+  eng_Latn: 'en',
+  deu_Latn: 'de',
+  fra_Latn: 'fra',
+};
+const TRANSLATION_REFERENCE = '这是商品搜索关键词翻译任务。严格按照 from 指定的源语言理解原文，不要因为拼写相同就改按另一种语言解释；单个词或短语按该语言最常见的词典义翻译。保留品牌名、型号和专有名词，不扩写、不解释，只输出中文译文。例如德语 Tee 或 tee 指饮品“茶”，不要按英语 tee 的服装义翻译为“T恤”。';
 let cachedAccessToken = '';
 let accessTokenExpiresAt = 0;
+
+function toBaiduLanguageCode(sourceLanguage) {
+  return BAIDU_LANGUAGE_CODES[sourceLanguage] || 'auto';
+}
 
 function json(value, status = 200) {
   return new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
@@ -15,12 +25,12 @@ function json(value, status = 200) {
 async function translateOne(env, item) {
   const headers = { 'Content-Type': 'application/json;charset=utf-8' };
   let url = BAIDU_TRANSLATE_URL;
-  let body = { q: item.value, from: 'auto', to: 'zh' };
+  let body = { q: item.value, from: toBaiduLanguageCode(item.sourceLanguage), to: 'zh' };
   if (env.BAIDU_API_KEY) {
     // 百度翻译开放平台新版大模型文本翻译 API。
     url = BAIDU_LLM_TRANSLATE_URL;
     headers.Authorization = `Bearer ${env.BAIDU_API_KEY}`;
-    body = { ...body, appid: env.BAIDU_APP_ID, model_type: 'llm' };
+    body = { ...body, appid: env.BAIDU_APP_ID, model_type: 'llm', reference: TRANSLATION_REFERENCE };
   } else if (env.BAIDU_ACCESS_TOKEN) {
     url += `?access_token=${encodeURIComponent(env.BAIDU_ACCESS_TOKEN)}`;
   } else if (env.BAIDU_SECRET_KEY) {
