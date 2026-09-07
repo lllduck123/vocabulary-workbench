@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx-js-style';
 import { cancelActiveTranslation, translateViaBaidu } from './baidu-translation';
 import { loadTranslationCache, translationCacheKey, type TranslationCacheEntry } from './translation-cache';
 import { detectDominantTranslationLanguage, detectTranslationLanguage, resolveTranslationLanguage, TRANSLATION_LANGUAGE_NAMES, type TranslationSourceLanguage } from './translation-language';
+import { cleanSheetName } from './excel-sheet-name.js';
 import './styles.css';
 import './help-tip.css';
 import './csv-layout.css';
@@ -45,7 +46,6 @@ function csvParse(buffer: ArrayBuffer): CsvData {
   const parse = (line: string) => { const out: string[] = []; let cell = '', quoted = false; for (let i = 0; i < line.length; i++) { const c = line[i]; if (c === '"' && line[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') quoted = !quoted; else if (c === delimiter && !quoted) { out.push(cell); cell = ''; } else cell += c; } out.push(cell); return out; };
   const parsed = lines.map(parse); const scanLimit = Math.min(20, Math.max(1, parsed.length - 1)); let headerIndex = 0; let bestScore = -Infinity; for (let i = 0; i < scanLimit; i++) { const row = parsed[i].map((v) => v.trim()).filter(Boolean); const next = parsed[i + 1] ?? []; const nextNext = parsed[i + 2] ?? []; const unique = new Set(row).size; const numeric = row.filter((v) => /^[\d.,%+-]+$/.test(v)).length; const score = row.length * 3 + unique * 2 + (Math.abs(next.length - parsed[i].length) <= 1 ? 4 : 0) + (Math.abs(nextNext.length - parsed[i].length) <= 1 ? 2 : 0) - numeric * 2 - (parsed[i].length === 1 ? 5 : 0) - i * 0.05; if (score > bestScore) { bestScore = score; headerIndex = i; } } const headers = parsed[headerIndex].map((h, i) => h.trim() || "未命名列" + (i + 1)); return { name: "", headers, rows: parsed.slice(headerIndex + 1) };
 }
-function cleanSheetName(name: string, used: Set<string>) { let base = name.replace(/[\\/?*\[\]:]/g, ' ').trim().slice(0, 31) || '未命名'; let out = base; let n = 2; while (used.has(out)) { const suffix = `_${n++}`; out = base.slice(0, 31 - suffix.length) + suffix; } used.add(out); return out; }
 function translatedSheetName(name: string, translation: string | undefined) { return translation ? `${name}（${translation}）` : name; }
 
 function App() {
